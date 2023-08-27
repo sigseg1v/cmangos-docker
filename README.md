@@ -2,42 +2,36 @@
 
 ## Extract map files from client
 
-```
-docker run --rm -it -v $(pwd):/output cbrgm/cmangos-extractor:latest
-```
-
-Copy compiled files from `/bin` to your client directory and run `./ExtractMaps`.
-
-## Run Container
-
-Mount `maps`, `mmaps`, `vmaps`, `dbc` and `Cameras` folders into the container by running the container command below from the directory where your folders are located.
+Build the extractor from this repository directory.
 
 ```
-docker run -itd \
-    --name=mangosd
-    -e MYSQL_HOST=127.0.0.1 \
-    -e MYSQL_PORT=3306 \
-    -e MYSQL_USER=root \
-    -e MYSQL_PWD=mangos \
-    -e MYSQL_MANGOS_USER=mangos \
-    -e MYSQL_MANGOS_PWD=mangos \
-    -e MANGOS_REALM_NAME=testrealm \
-    -e MANGOS_GM_ACCOUNT=admin
-    -e MANGOS_GM_PWD=changeme
-    -v $(pwd)/maps:/opt/mangos/maps \
-    -v $(pwd)/vmaps:/opt/mangos/vmaps \
-    -v $(pwd)/mmaps:/opt/mangos/mmaps \
-    -v $(pwd)/dbc:/opt/mangos/dbc \
-    -p 3724:3724 \
-    -p 8085:8085 \
-    cbrgm/cmangos:wotlk
+docker build -t cmangos-extractor extractors/
 ```
 
-or build your own:
+Then, change directory to the wotlk client and run the following:
+
+Note 1: Ensure the path to the wotlk client does not contain any spaces.
+Note 2: This can take a long time to run unless you have a SSD, or if you run in WSL (several hours).
+
+```
+docker run --rm -it -v "$(pwd)":/output cmangos-extractor
+```
+
+## Build container
 
 ```
 docker build -t "cmangos:wotlk" ./mangos
 ```
+
+## Run container
+
+Copy `maps`, `mmaps`, `vmaps`, `dbc` and `Cameras` folders that were generated in your client directory into this directory under a a new folder called `resources`, and then run the container.
+
+```
+docker-compose up
+```
+
+If you want to run in the background, use `docker-compose up -d` instead, and `docker-compose down` to stop the background server.
 
 ## Manage accounts
 
@@ -58,7 +52,7 @@ To change an account password
 UPDATE `account` SET `sha_pass_hash` = SHA1(CONCAT(UPPER(`username`),':',UPPER('passwordxyz'))) WHERE `id` = x;
 ```
 
-## Environment vars:
+## Environment vars (set in docker-compose.yml):
 
 * `MYSQL_HOST`: MySQL database host ip/dns name
 * `MYSQL_PORT`: MySQL database port
@@ -77,10 +71,3 @@ UPDATE `account` SET `sha_pass_hash` = SHA1(CONCAT(UPPER(`username`),':',UPPER('
 * `MANGOS_ALLOW_PLAYERBOTS`: Allow PlayerbotAI commands (Default: 0)
 * `MANGOS_ALLOW_AUCTIONBOT_SELLER`: Allow AuctionHouseBot seller (Default: 0)
 * `MANGOS_ALLOW_AUCTIONBOT_BUYER`: Allow AuctionHouseBot buyer (Default: 0)
-
-## Todo:
-
-* Allow external config download via `wget`
-* Replace debian9 image with alpine
-* Create kubernetes deployment
-* Create terraform config for hetzner cloud

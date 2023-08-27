@@ -15,6 +15,11 @@ make -j4
 make install -j4
 
 # Copy all needed files for data extraction
-mkdir -p /output/bin
-cp -r /server/contrib/extractor_scripts/* /output/bin
-cp -r /server/bin/tools/* /output/bin
+cp -r /server/contrib/extractor_scripts/* /output
+cp -r /server/bin/tools/* /output
+
+cd /output
+chmod +x /output/ExtractResources.sh
+chmod +x /output/MoveMapGen.sh
+
+./ExtractResources.sh
