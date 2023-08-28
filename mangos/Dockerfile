@@ -1,4 +1,8 @@
-FROM gcc:7.3.0 as build
+FROM ubuntu:20.04 as build
+
+RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
+RUN apt update
+RUN apt-get install -y tzdata
 
 RUN apt-get update -qq \
 	&& apt-get install build-essential gcc g++ automake git-core autoconf make patch libmysql++-dev mysql-server libtool libssl-dev grep binutils zlibc libc6 libbz2-dev cmake subversion libboost-all-dev -y \
@@ -9,28 +13,52 @@ RUN apt-get update -qq \
 	&& make -j4 \
 	&& make install -j4
 
-FROM ubuntu:18.04 as image
+FROM ubuntu:20.04 as image
 LABEL title="cmangos docker" \
 	url1="https://cbrgm.net" \
 	twitter="@chrisbargmann" \
 	maintainer="Christian Bargmann" \
 	version="1.0"
 
-ENV MYSQL_DATABASE_REALM=wotlkrealmd \
-	MYSQL_DATABASE_WORLD=wotlkmangos \
-	MYSQL_DATABASE_CHARACTER=wotlkcharacters \
-	MYSQL_MANGOS_USER=mangos \
-	MYSQL_MANGOS_PWD=mangos \
-	MANGOS_GM_ACCOUNT=admin \
-	MANGOS_GM_PWD=admin \
-	MANGOS_GAMETYPE=1 \
-	MANGOS_MOTD="Welcome!" \
-	MANGOS_REALM_NAME=MyNewServer \
-	MANGOS_SERVER_IP=0.0.0.0 \
-	MANGOS_SERVER_PUBLIC_IP=127.0.0.1 \
-	MANGOS_ALLOW_PLAYERBOTS=0 \
-	MANGOS_ALLOW_AUCTIONBOT_SELLER=0 \
-	MANGOS_ALLOW_AUCTIONBOT_BUYER=0
+# need to set args and envs this way to get default values that are still able to be overidden via docker-compose
+# see: https://stackoverflow.com/a/56356911/19017508
+ARG MYSQL_DATABASE_REALM=wotlkrealmd
+ARG MYSQL_DATABASE_WORLD=wotlkmangos
+ARG MYSQL_DATABASE_CHARACTER=wotlkcharacters
+ARG MYSQL_DATABASE_LOGS=wotlklogs
+ARG MYSQL_MANGOS_USER=mangos
+ARG MYSQL_MANGOS_PWD=mangos
+ARG MANGOS_GM_ACCOUNT=admin
+ARG MANGOS_GM_PWD=admin
+ARG MANGOS_GAMETYPE=1
+ARG MANGOS_MOTD="Welcome!"
+ARG MANGOS_REALM_NAME=MyNewServer
+ARG MANGOS_SERVER_IP=0.0.0.0
+ARG MANGOS_SERVER_PUBLIC_IP=127.0.0.1
+ARG MANGOS_DISABLE_PLAYERBOTS=0
+ARG MANGOS_ALLOW_AUCTIONBOT_SELLER=0
+ARG MANGOS_ALLOW_AUCTIONBOT_BUYER=0
+ARG MANGOS_REV=master
+ARG DB_REV=master
+
+ENV MYSQL_DATABASE_REALM=${MYSQL_DATABASE_REALM}
+ENV MYSQL_DATABASE_WORLD=${MYSQL_DATABASE_WORLD}
+ENV MYSQL_DATABASE_CHARACTER=${MYSQL_DATABASE_CHARACTER}
+ENV MYSQL_DATABASE_LOGS=${MYSQL_DATABASE_LOGS}
+ENV MYSQL_MANGOS_USER=${MYSQL_MANGOS_USER}
+ENV MYSQL_MANGOS_PWD=${MYSQL_MANGOS_PWD}
+ENV MANGOS_GM_ACCOUNT=${MANGOS_GM_ACCOUNT}
+ENV MANGOS_GM_PWD=${MANGOS_GM_PWD}
+ENV MANGOS_GAMETYPE=${MANGOS_GAMETYPE}
+ENV MANGOS_MOTD=${MANGOS_MOTD}
+ENV MANGOS_REALM_NAME=${MANGOS_REALM_NAME}
+ENV MANGOS_SERVER_IP=${MANGOS_SERVER_IP}
+ENV MANGOS_SERVER_PUBLIC_IP=${MANGOS_SERVER_PUBLIC_IP}
+ENV MANGOS_DISABLE_PLAYERBOTS=${MANGOS_DISABLE_PLAYERBOTS}
+ENV MANGOS_ALLOW_AUCTIONBOT_SELLER=${MANGOS_ALLOW_AUCTIONBOT_SELLER}
+ENV MANGOS_ALLOW_AUCTIONBOT_BUYER=${MANGOS_ALLOW_AUCTIONBOT_BUYER}
+ENV MANGOS_REV=${MANGOS_REV}
+ENV DB_REV=${DB_REV}
 
 WORKDIR /opt/mangos
 
@@ -40,6 +68,10 @@ COPY --from=build /server/src/game/AuctionHouseBot/ahbot.conf.dist.in etc/ahbot.
 COPY entrypoint.sh /usr/local/bin
 COPY supervisord.conf /etc/
 
+RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
+RUN apt update
+RUN apt-get install -y tzdata
+
 RUN mkdir -p /opt/mangos \
 	&& apt-get update -y \
 	&& apt-get upgrade -y \
@@ -48,6 +80,7 @@ RUN mkdir -p /opt/mangos \
 	&& mv etc/realmd.conf.dist etc/realmd.conf \
 	&& mv etc/ahbot.conf.dist etc/ahbot.conf \
 	&& mv etc/playerbot.conf.dist etc/playerbot.conf \
+	&& mv etc/anticheat.conf.dist etc/anticheat.conf \
 	&& mkdir -p /var/log/supervisor/ \
 	&& touch /var/log/supervisord.log \
 	&& useradd -m -s /bin/bash mangos \

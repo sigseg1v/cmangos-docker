@@ -11,46 +11,57 @@ docker build -t cmangos-extractor extractors/
 Then, change directory to the wotlk client and run the following:
 
 Note 1: Ensure the path to the wotlk client does not contain any spaces.
+
 Note 2: This can take a long time to run unless you have a SSD, or if you run in WSL (several hours).
 
 ```
 docker run --rm -it -v "$(pwd)":/output cmangos-extractor
 ```
 
-## Build container
+## Setup directories for resources and database
+
+Make a `resources` folder to hold the extracted data.
+
+```
+mkdir resources
+```
+
+Copy `maps`, `mmaps`, `vmaps`, `dbc` and `Cameras` folders that were generated in your client directory into this `resources` directory.
+
+Also make an empty folder for hosting the database data called `database`.
+
+```
+mkdir database
+```
+
+## Set important options
+
+In docker-compose.yml set:
+- MANGOS_GM_ACCOUNT
+- MANGOS_GM_PWD
+- MANGOS_SERVER_PUBLIC_IP
+
+## Build and run container
+
+Navigate to this directory, then build the mangos server
 
 ```
 docker build -t "cmangos:wotlk" ./mangos
 ```
 
-## Run container
-
-Copy `maps`, `mmaps`, `vmaps`, `dbc` and `Cameras` folders that were generated in your client directory into this directory under a a new folder called `resources`, and then run the container.
+then, run the container.
 
 ```
 docker-compose up
 ```
 
-If you want to run in the background, use `docker-compose up -d` instead, and `docker-compose down` to stop the background server.
+If you want to run in the background, use `docker-compose up -d` instead.
+
+To stop the service and delete the containers (deletes database unless using volume mount on msql in docker-compose) use `docker-compose down`.
 
 ## Manage accounts
 
-To create a new account
-```sql
-INSERT INTO `account` (`username`,`sha_pass_hash`,`expansion`) VALUES ('username', SHA1(CONCAT(UPPER('username'),':',UPPER('password'))),2);
-```
-
-To change a username
-
-```sql
-UPDATE `account` SET `username` = 'new_username', `sha_pass_hash` = SHA1(CONCAT(UPPER('new_username'),':',UPPER('passwordxyz'))) WHERE `id` = x;
-```
-
-To change an account password
-
-```sql
-UPDATE `account` SET `sha_pass_hash` = SHA1(CONCAT(UPPER(`username`),':',UPPER('passwordxyz'))) WHERE `id` = x;
-```
+TODO
 
 ## Environment vars (set in docker-compose.yml):
 
@@ -68,6 +79,20 @@ UPDATE `account` SET `sha_pass_hash` = SHA1(CONCAT(UPPER(`username`),':',UPPER('
 * `MANGOS_SERVER_IP`: IP for mangosd and realmd port binding (Default 0.0.0.0)
 * `MANGOS_SERVER_PUBLIC_IP`: Public IP for your mangos server (Default 127.0.0.1)
 * `MANGOS_OVERRIDE_CONF_URL`: External mangosd.conf download
-* `MANGOS_ALLOW_PLAYERBOTS`: Allow PlayerbotAI commands (Default: 0)
+* `MANGOS_DISABLE_PLAYERBOTS`: Disable PlayerbotAI commands (Default: 0)
 * `MANGOS_ALLOW_AUCTIONBOT_SELLER`: Allow AuctionHouseBot seller (Default: 0)
 * `MANGOS_ALLOW_AUCTIONBOT_BUYER`: Allow AuctionHouseBot buyer (Default: 0)
+
+## Debugging
+
+To get a shell on one of the containers (eg. the server), run the following in a separate terminal while it's running, where `server` is the service name in docker-compose.yml:
+
+```
+docker-compose exec server /bin/bash
+```
+
+If you are on the `server` container and want to execute queries directly, you can get a mysql prompt by using
+
+```
+mysql -umangos -pmangos -h mysql -Dwotlkmangos
+```

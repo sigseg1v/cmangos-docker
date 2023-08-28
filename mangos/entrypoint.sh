@@ -26,6 +26,7 @@ setup_mysql_config () {
     if [ -z "${MYSQL_MANGOS_USER}" ]; then echo "Missing MYSQL_MANGOS_USER environment variable. Unable to continue."; exit 1; fi
     if [ -z "${MYSQL_MANGOS_PWD}" ]; then echo "Missing MYSQL_MANGOS_PWD environment variable. Unable to continue."; exit 1; fi
     if [ -z "${MYSQL_DATABASE_CHARACTER}" ]; then echo "Missing MYSQL_DATABASE_CHARACTER environment variable. Unable to continue."; exit 1; fi
+    if [ -z "${MYSQL_DATABASE_LOGS}" ]; then echo "Missing MYSQL_DATABASE_LOGS environment variable. Unable to continue."; exit 1; fi
     if [ -z "${MYSQL_DATABASE_REALM}" ]; then echo "Missing MYSQL_DATABASE_REALM environment variable. Unable to continue."; exit 1; fi
     if [ -z "${MYSQL_DATABASE_WORLD}" ]; then echo "Missing MYSQL_DATABASE_WORLD environment variable. Unable to continue."; exit 1; fi
     if [ -z "${MANGOS_REALM_NAME}" ]; then echo "Missing MANGOS_REALM_NAME environment variable. Unable to continue."; exit 1; fi
@@ -37,29 +38,38 @@ setup_mysql_config () {
         # Clone latest wotlk-db into database folder
         echo "Cloning latest database files..."
         git clone https://github.com/cmangos/mangos-wotlk -b master --recursive mangos
+        cd mangos
+        git checkout ${MANGOS_REV}
+        cd ..
         git clone https://github.com/cmangos/wotlk-db -b master --recursive mangos/db
+        cd mangos/db
+        git checkout ${DB_REV}
+        cd ../..
 
-        echo "[STEP 1/6] General database setup"
+        echo "[STEP 1/7] General database setup"
         echo "Creating databases..."
 
 cat > mangos/sql/create/db_create_mysql.sql <<EOF
 CREATE DATABASE wotlkmangos DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 CREATE DATABASE wotlkcharacters DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 CREATE DATABASE wotlkrealmd DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE wotlklogs DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 CREATE USER IF NOT EXISTS '${MYSQL_MANGOS_USER}'@'localhost' IDENTIFIED BY '${MYSQL_MANGOS_PWD}';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkmangos.* TO '${MYSQL_MANGOS_USER}'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkcharacters.* TO '${MYSQL_MANGOS_USER}'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkrealmd.* TO '${MYSQL_MANGOS_USER}'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlklogs.* TO '${MYSQL_MANGOS_USER}'@'localhost';
 CREATE USER IF NOT EXISTS '${MYSQL_MANGOS_USER}'@'%' IDENTIFIED BY '${MYSQL_MANGOS_PWD}';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkmangos.* TO '${MYSQL_MANGOS_USER}'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkcharacters.* TO '${MYSQL_MANGOS_USER}'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlkrealmd.* TO '${MYSQL_MANGOS_USER}'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON wotlklogs.* TO '${MYSQL_MANGOS_USER}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} < mangos/sql/create/db_create_mysql.sql
 
-        echo "[STEP 2/6] World database setup"
+        echo "[STEP 2/7] World database setup"
         echo "Initialize mangos database..."
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_WORLD} < mangos/sql/base/mangos.sql
 
@@ -72,44 +82,53 @@ EOF
         # cat mangos/sql/base/dbc/cmangos_fixes/*.sql > mangos/sql/base/dbc/cmangos_fixes/import.sql
         # mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_WORLD} < mangos/sql/base/dbc/cmangos_fixes/import.sql
 
-        echo "[STEP 3/6] Characters database setup"
+        echo "[STEP 3/7] Characters database setup"
         echo "Initialize characters database..."
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_CHARACTER} < mangos/sql/base/characters.sql
 
-        echo "[STEP 4/6] Realmd database setup"
+        echo "[STEP 4/7] Logs database setup"
+        echo "Initialize logs database..."
+        mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_LOGS} < mangos/sql/base/logs.sql
+
+        echo "[STEP 5/7] Realmd database setup"
         echo "Initialize realmd database..."
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} < mangos/sql/base/realmd.sql
 
-        echo "[STEP 5/6] Filling world database"
+        echo "[STEP 6/7] Filling world database"
         echo "Filling up world database..."
         cd mangos/db
+
+# Below can be cleaned up, some of the config options were already here but seem unused on current version, see InstallFullDB.config docs
 cat << EOF > InstallFullDB.config
-DB_HOST="${MYSQL_HOST}"
+MYSQL_HOST="${MYSQL_HOST}"
+MYSQL_USERIP="%"
+MANGOS_DBHOST="${MYSQL_HOST}"
 DB_PORT="${MYSQL_PORT}"
-DATABASE="${MYSQL_DATABASE_WORLD}"
-USERNAME="${MYSQL_MANGOS_USER}"
-PASSWORD="${MYSQL_MANGOS_PWD}"
+MYSQL_PORT="${MYSQL_PORT}"
+MANGOS_DBNAME="${MYSQL_DATABASE_WORLD}"
+MANGOS_DBUSER="${MYSQL_MANGOS_USER}"
+MYSQL_USERNAME="${MYSQL_MANGOS_USER}"
+MANGOS_DBPASS="${MYSQL_MANGOS_PWD}"
+MYSQL_PASSWORD="${MYSQL_MANGOS_PWD}"
 CORE_PATH="/opt/mangos/mangos"
+MYSQL_PATH="/usr/bin/mysql"
 MYSQL="mysql"
 FORCE_WAIT="NO"
 DEV_UPDATES="NO"
+AHBOT="YES"
 EOF
         chmod a+x InstallFullDB.sh
-        ./InstallFullDB.sh
+        # TODO: Can the above db setup steps be removed if this script initializes everything?
+        ./InstallFullDB.sh -InstallAll "${MYSQL_USER}" "${MYSQL_PWD}" DeleteAll
         cd ../..
 
-        echo "[STEP 6/6] Configure realmlist and gamemaster accounts"
+        echo "[STEP 7/7] Configure realmlist and gamemaster accounts"
         # Adding entry to realmlist
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "DELETE FROM realmlist WHERE id=1;"
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "INSERT INTO realmlist (id, name, address, port, icon, realmflags, timezone, allowedSecurityLevel) VALUES ('1', '${MANGOS_REALM_NAME}', '${MANGOS_SERVER_PUBLIC_IP}', '8085', '1', '0', '1', '0');"
 
         # Deleting all example entries from accounts db
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "TRUNCATE account;"
-
-        # Add gamemaster account
-        if ! [ -z "${MANGOS_GM_ACCOUNT}" ] && ! [ -z "${MANGOS_GM_PWD}" ]; then
-            mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "INSERT INTO account (username,sha_pass_hash,gmlevel,expansion) VALUES ('${MANGOS_GM_ACCOUNT}', SHA1(CONCAT(UPPER('${MANGOS_GM_ACCOUNT}'),':',UPPER('${MANGOS_GM_PWD}'))),'4','2');"
-        fi
 
         # Cleanup
         rm -rf /opt/mangos/mangos
@@ -124,6 +143,7 @@ setup_config() {
   sed -i "s/^LoginDatabaseInfo.*/LoginDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_REALM}/" /opt/mangos/etc/mangosd.conf
   sed -i "s/^WorldDatabaseInfo.*/WorldDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_WORLD}/" /opt/mangos/etc/mangosd.conf
   sed -i "s/^CharacterDatabaseInfo.*/CharacterDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_CHARACTER}/" /opt/mangos/etc/mangosd.conf
+  sed -i "s/^LogsDatabaseInfo.*/LogsDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_LOGS}/" /opt/mangos/etc/mangosd.conf
   sed -i "s/^BindIP.*/BindIP = ${MANGOS_SERVER_IP}/" /opt/mangos/etc/mangosd.conf
   sed -i 's/^DataDir.*/DataDir = ".."/' /opt/mangos/etc/mangosd.conf
 
@@ -134,7 +154,7 @@ setup_config() {
 
   # opt/mangos/etc/playerbot.conf configuration
   echo "Configuring /opt/mangos/etc/playerbot.conf..."
-  sed -i "s/^PlayerbotAI.DisableBots.*/PlayerbotAI.DisableBots = ${MANGOS_ALLOW_PLAYERBOTS}/" /opt/mangos/etc/playerbot.conf
+  sed -i "s/^PlayerbotAI.DisableBots.*/PlayerbotAI.DisableBots = ${MANGOS_DISABLE_PLAYERBOTS}/" /opt/mangos/etc/playerbot.conf
   sed -i "s/^PlayerbotAI.FollowDistanceMin.*/PlayerbotAI.FollowDistanceMin = 1/" /opt/mangos/etc/playerbot.conf
   sed -i "s/^PlayerbotAI.FollowDistanceMax.*/PlayerbotAI.FollowDistanceMax = 2/" /opt/mangos/etc/playerbot.conf
 

@@ -1,4 +1,5 @@
 resources/*
+database/*
 extractors/bin/*
 terraform/.terraform.*
 terraform/.terraform/

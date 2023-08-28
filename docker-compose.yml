@@ -2,21 +2,24 @@ version: '3'
 services:
 
   mysql:
-    image: 'mysql:5.7'
+    image: 'mysql:5.7.16'
     restart: always
     ports:
       - 3306
     environment:
       MYSQL_ROOT_PASSWORD: 'changeme'
+    # volumes:
+    # - ./database:/var/lib/mysql
 
   server:
     depends_on:
       - mysql
-    image: 'cbrgm/cmangos:wotlk'
+    image: 'cmangos:wotlk'
     ports:
       - '8085:8085'
       - '3724:3724'
     restart: always
+    #entrypoint: ["sh", "-c", "sleep 2073600"]
     environment:
       MYSQL_HOST: 'mysql'
       MYSQL_PORT: '3306'
@@ -26,25 +29,18 @@ services:
       MYSQL_MANGOS_PWD: 'mangos'
       MANGOS_GM_ACCOUNT: 'admin'
       MANGOS_GM_PWD: 'changeme'
-      MANGOS_GAMETYPE: 6
+      MANGOS_GAMETYPE: 1
       MANGOS_MOTD: 'Welcome!'
-      MANGOS_REALM_NAME: 'MyNewServer'
-      MANGOS_SERVER_PUBLIC_IP: '116.203.121.99'
-      MANGOS_ALLOW_PLAYERBOTS: 1
+      MANGOS_REALM_NAME: 'cmangos'
+      MANGOS_SERVER_PUBLIC_IP: '127.0.0.1'
+      MANGOS_DISABLE_PLAYERBOTS: 0
       MANGOS_ALLOW_AUCTIONBOT_SELLER: 1
       MANGOS_ALLOW_AUCTIONBOT_BUYER: 1
+      CONTAINER_TIMEZONE: 'Etc/UTC'
+      MANGOS_REV: '4161a090bfa7acae111d497de4aadbe182874292' # revision of https://github.com/cmangos/mangos-wotlk , or 'master' if you want latest
+      DB_REV: '62b1248d48453ae1cf6de3e945ac1d521f163798' # revision of https://github.com/cmangos/wotlk-db , or 'master' if you want latest
     volumes:
       - ./resources/maps:/opt/mangos/maps
       - ./resources/vmaps:/opt/mangos/vmaps
       - ./resources/mmaps:/opt/mangos/mmaps
       - ./resources/dbc:/opt/mangos/dbc
-
-  phpmyadmin:
-    image: 'phpmyadmin/phpmyadmin:latest'
-    restart: always
-    depends_on:
-      - mysql
-    ports:
-      - '8080:80'
-    environment:
-       PMA_HOST: "mysql"
