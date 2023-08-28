@@ -4,8 +4,11 @@ services:
   mysql:
     image: 'mysql:5.7.16'
     restart: always
-    ports:
-      - 3306
+
+    # private container network ports
+    expose:
+      - '3306'
+
     environment:
       MYSQL_ROOT_PASSWORD: 'changeme'
     # volumes:
@@ -15,11 +18,17 @@ services:
     depends_on:
       - mysql
     image: 'cmangos:wotlk'
+
+    # public ports
     ports:
       - '8085:8085'
       - '3724:3724'
+
+    # private container network ports
+    expose:
+      - '3443' # mangosd remote access
+
     restart: always
-    #entrypoint: ["sh", "-c", "sleep 2073600"]
     environment:
       MYSQL_HOST: 'mysql'
       MYSQL_PORT: '3306'
@@ -27,8 +36,6 @@ services:
       MYSQL_PWD: 'changeme'
       MYSQL_MANGOS_USER: 'mangos'
       MYSQL_MANGOS_PWD: 'mangos'
-      MANGOS_GM_ACCOUNT: 'admin'
-      MANGOS_GM_PWD: 'changeme'
       MANGOS_GAMETYPE: 1
       MANGOS_MOTD: 'Welcome!'
       MANGOS_REALM_NAME: 'cmangos'

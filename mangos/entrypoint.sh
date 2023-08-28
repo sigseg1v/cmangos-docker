@@ -127,8 +127,9 @@ EOF
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "DELETE FROM realmlist WHERE id=1;"
         mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "INSERT INTO realmlist (id, name, address, port, icon, realmflags, timezone, allowedSecurityLevel) VALUES ('1', '${MANGOS_REALM_NAME}', '${MANGOS_SERVER_PUBLIC_IP}', '8085', '1', '0', '1', '0');"
 
-        # Deleting all example entries from accounts db
-        mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "TRUNCATE account;"
+        # Deleting all example entries from accounts db except administrator
+        mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "DELETE FROM account WHERE username != 'administrator';"
+        mysql -u${MYSQL_USER} -p${MYSQL_PWD} -h ${MYSQL_HOST} -D${MYSQL_DATABASE_REALM} -e "UPDATE account SET gmlevel = 4 where username = 'administrator';"
 
         # Cleanup
         rm -rf /opt/mangos/mangos
@@ -146,6 +147,12 @@ setup_config() {
   sed -i "s/^LogsDatabaseInfo.*/LogsDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_LOGS}/" /opt/mangos/etc/mangosd.conf
   sed -i "s/^BindIP.*/BindIP = ${MANGOS_SERVER_IP}/" /opt/mangos/etc/mangosd.conf
   sed -i 's/^DataDir.*/DataDir = ".."/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.Enable.*/Ra.Enable = 1/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.Ip.*/Ra.Ip = 0.0.0.0/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.Port.*/Ra.Port = 3443/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.MinLevel.*/Ra.MinLevel = 3/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.Secure.*/Ra.Secure = 1/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Ra.Restricted.*/Ra.Restricted = 1/' /opt/mangos/etc/mangosd.conf
 
   # opt/mangos/etc/realmd.conf configuration
   echo "Configuring /opt/mangos/conf/realmd.conf..."

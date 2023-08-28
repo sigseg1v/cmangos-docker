@@ -33,8 +33,6 @@ services:
       MYSQL_PWD: 'changeme'
       MYSQL_MANGOS_USER: 'mangos'
       MYSQL_MANGOS_PWD: 'mangos'
-      MANGOS_GM_ACCOUNT: 'admin'
-      MANGOS_GM_PWD: 'changeme'
       MANGOS_GAMETYPE: 6
       MANGOS_MOTD: 'Welcome!'
       MANGOS_REALM_NAME: 'MyNewServer'

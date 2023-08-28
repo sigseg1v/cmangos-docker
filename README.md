@@ -37,9 +37,13 @@ mkdir database
 ## Set important options
 
 In docker-compose.yml set:
-- MANGOS_GM_ACCOUNT
-- MANGOS_GM_PWD
 - MANGOS_SERVER_PUBLIC_IP
+
+Set it to the public IP of your server hosting mangosd and realmd. You can get your public IP by searching google for "what is my ip address". For example, if the IP is 1.2.3.4 then make sure the file has:
+
+```
+- MANGOS_SERVER_PUBLIC_IP: '1.2.3.4'
+```
 
 ## Build and run container
 
@@ -55,13 +59,55 @@ then, run the container.
 docker-compose up
 ```
 
-If you want to run in the background, use `docker-compose up -d` instead.
+If you want to run in the background, use `docker-compose up -d` instead, and `docker-compose stop` to pause the service.
 
-To stop the service and delete the containers (deletes database unless using volume mount on msql in docker-compose) use `docker-compose down`.
+To delete the containers (deletes database unless using volume mount on msql in docker-compose) use `docker-compose down`.
 
 ## Manage accounts
 
-TODO
+The first thing to do is overwrite the administrator account with a different password.
+
+To connect to mangosd, have the server running and then in a separate terminal run the following:
+
+```
+docker-compose exec server telnet 127.0.0.1 3443
+```
+
+Enter username "administrator" and password "administrator" to log in.
+
+To set the admin password, run the following (but replace "newpw" with the new password you want). Make sure to remember the admin password because you'll need it to create new accounts.
+
+```
+account password administrator newpw newpw
+```
+
+To add a new account named bob with password hunter2, run the following while connected to mangosd (but replace the account name and password with something else, obviously):
+
+```
+account create bob hunter2
+account set addon bob 2
+account set gmlevel bob 3
+```
+
+A general list of mangosd commands are here: https://github.com/dkpminus/mangos-gm-commands
+
+Type `quit` to exit the mangosd telnet session.
+
+
+## Connecting to server
+
+Find the public IP of your server hosting mangosd and realmd, which you should have already put into MANGOS_SERVER_PUBLIC_IP in the docker-compose file before you stated the server.
+
+Forward the following ports on that server:
+  - 8085 tcp and udp
+  - 3724 tcp and udp
+
+Then, in the `Data/enUS/realmlist.wtf` file in your WoW client folder, add the same IP that you put in MANGOS_SERVER_PUBLIC_IP.
+For example, if the IP is 1.2.3.4 then make sure the file has:
+
+```
+set realmlist 1.2.3.4
+```
 
 ## Environment vars (set in docker-compose.yml):
 
@@ -71,8 +117,6 @@ TODO
 * `MYSQL_PWD`: MySQL database password
 * `MYSQL_MANGOS_USER`: MySQL database user used for connections from server (Default: mangos)
 * `MYSQL_MANGOS_PWD`: MySQL database user password used for connections from server (Default: mangos)
-* `MANGOS_GM_ACCOUNT`: Gamemaster account name (Default: admin)
-* `MANGOS_GM_PWD`: Gamemaster account password (Default: changeme)
 * `MANGOS_GAMETYPE`: Realm Gametype (Default: 1 (PVP))
 * `MANGOS_MOTD`: Message of the Day (Default: "Welcome!")
 * `MANGOS_REALM_NAME`: Name of your realm (Default: MyNewServer)
@@ -95,4 +139,9 @@ If you are on the `server` container and want to execute queries directly, you c
 
 ```
 mysql -umangos -pmangos -h mysql -Dwotlkmangos
+```
+
+To run commands on the mangosd directly:
+```
+docker-compose exec server telnet 127.0.0.1 3443
 ```
