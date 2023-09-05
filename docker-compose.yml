@@ -51,3 +51,20 @@ services:
       - ./resources/vmaps:/opt/mangos/vmaps
       - ./resources/mmaps:/opt/mangos/mmaps
       - ./resources/dbc:/opt/mangos/dbc
+
+  backup:
+    depends_on:
+      - mysql
+    image: databack/mysql-backup
+    restart: always
+    volumes:
+     - ./backups:/db
+     #- /path/to/pre-backup/scripts:/scripts.d/pre-backup
+     #- /path/to/post-backup/scripts:/scripts.d/post-backup
+    environment:
+      DB_DUMP_TARGET: '/db'
+      DB_USER: 'root'
+      DB_PASS: 'changeme'
+      DB_DUMP_FREQ: '1440' # minutes between backups. 1440 = once per day. Note that min backup size is ~50MB or so.
+      DB_DUMP_BEGIN: '+5' # how long to wait before backup
+      DB_SERVER: 'mysql' # docker service name of server to backup
