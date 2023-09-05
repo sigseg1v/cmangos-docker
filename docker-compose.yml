@@ -41,8 +41,8 @@ services:
       MANGOS_REALM_NAME: 'cmangos'
       MANGOS_SERVER_PUBLIC_IP: '127.0.0.1'
       MANGOS_DISABLE_PLAYERBOTS: 0
-      MANGOS_ALLOW_AUCTIONBOT_SELLER: 1
-      MANGOS_ALLOW_AUCTIONBOT_BUYER: 1
+      MANGOS_AUCTIONBOT_SELL_CHANCE: 40
+      MANGOS_AUCTIONBOT_BUY_CHANCE: 10
       CONTAINER_TIMEZONE: 'Etc/UTC'
       MANGOS_REV: '4161a090bfa7acae111d497de4aadbe182874292' # revision of https://github.com/cmangos/mangos-wotlk , or 'master' if you want latest
       DB_REV: '62b1248d48453ae1cf6de3e945ac1d521f163798' # revision of https://github.com/cmangos/wotlk-db , or 'master' if you want latest

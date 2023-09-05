@@ -167,8 +167,8 @@ setup_config() {
 
   # opt/mangos/etc/ahconf.conf configuration
   echo "Configuring /opt/mangos/etc/ahconf.conf..."
-  sed -i "s/^AuctionHouseBot.Seller.Enabled.*/AuctionHouseBot.Seller.Enabled = ${MANGOS_ALLOW_AUCTIONBOT_SELLER}/" /opt/mangos/etc/ahbot.conf
-  sed -i "s/^AuctionHouseBot.Buyer.Enabled.*/AuctionHouseBot.Buyer.Enabled = ${MANGOS_ALLOW_AUCTIONBOT_BUYER}/" /opt/mangos/etc/ahbot.conf
+  sed -i "s/^AuctionHouseBot.Chance.Sell.*/AuctionHouseBot.Chance.Sell = ${MANGOS_AUCTIONBOT_SELL_CHANCE}/" /opt/mangos/etc/ahbot.conf
+  sed -i "s/^AuctionHouseBot.Chance.Buy.*/AuctionHouseBot.Chance.Buy = ${MANGOS_AUCTIONBOT_BUY_CHANCE}/" /opt/mangos/etc/ahbot.conf
 
   # Gameplay specific options...
   if ! [ -z "${MANGOS_GAMETYPE}" ]; then sed -i "s/^GameType.*/GameType = ${MANGOS_GAMETYPE}/" /opt/mangos/etc/mangosd.conf; fi

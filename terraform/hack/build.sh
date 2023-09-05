@@ -38,8 +38,8 @@ services:
       MANGOS_REALM_NAME: 'MyNewServer'
       MANGOS_SERVER_PUBLIC_IP: '${MANGOS_SERVER_PUBLIC_IP}'
       MANGOS_DISABLE_PLAYERBOTS: 0
-      MANGOS_ALLOW_AUCTIONBOT_SELLER: 1
-      MANGOS_ALLOW_AUCTIONBOT_BUYER: 1
+      MANGOS_AUCTIONBOT_SELL_CHANCE: 10
+      MANGOS_AUCTIONBOT_BUY_CHANCE: 10
     volumes:
       - ./resources/maps:/opt/mangos/maps
       - ./resources/vmaps:/opt/mangos/vmaps

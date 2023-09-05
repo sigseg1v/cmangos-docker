@@ -124,8 +124,8 @@ set realmlist 1.2.3.4
 * `MANGOS_SERVER_PUBLIC_IP`: Public IP for your mangos server (Default 127.0.0.1)
 * `MANGOS_OVERRIDE_CONF_URL`: External mangosd.conf download
 * `MANGOS_DISABLE_PLAYERBOTS`: Disable PlayerbotAI commands (Default: 0)
-* `MANGOS_ALLOW_AUCTIONBOT_SELLER`: Allow AuctionHouseBot seller (Default: 0)
-* `MANGOS_ALLOW_AUCTIONBOT_BUYER`: Allow AuctionHouseBot buyer (Default: 0)
+* `MANGOS_AUCTIONBOT_SELL_CHANCE`: Chance the AuctionBot will sell items (Default: 10; Range: 0-100)
+* `MANGOS_AUCTIONBOT_BUY_CHANCE`: Chance the AuctionBot will buy items (Default: 10; Range: 0-100)
 
 ## Debugging
 
