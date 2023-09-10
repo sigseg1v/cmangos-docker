@@ -145,3 +145,16 @@ To run commands on the mangosd directly:
 ```
 docker-compose exec server telnet 127.0.0.1 3443
 ```
+
+To get last 2k lines of server log file (run in another terminal while docker is already running)
+```
+docker-compose exec server tail -n 2000 /opt/mangos/bin/Server.log
+```
+
+Other relevant log files you can use above:
+- Char.log
+- EventAIErrors.log
+- SD2Errors.log
+- DBErrors.log
+- Realmd.log
+- Server.log
