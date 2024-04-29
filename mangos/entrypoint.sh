@@ -154,6 +154,26 @@ setup_config() {
   sed -i 's/^Ra.Secure.*/Ra.Secure = 1/' /opt/mangos/etc/mangosd.conf
   sed -i 's/^Ra.Restricted.*/Ra.Restricted = 1/' /opt/mangos/etc/mangosd.conf
 
+  # xp rates
+  sed -i 's/^Rate.Pet.XP.Kill.*/Rate.Pet.XP.Kill = 3/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.XP.Kill.*/Rate.XP.Kill = 3/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.XP.Quest.*/Rate.XP.Quest = 3/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.XP.Explore.*/Rate.XP.Explore = 10/' /opt/mangos/etc/mangosd.conf
+
+  # regen rates
+  sed -i 's/^Rate.Health.*/Rate.Health = 10/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Mana.*/Rate.Mana = 20/' /opt/mangos/etc/mangosd.conf
+
+  # drop rates
+  sed -i 's/^Rate.Drop.Item.Poor.*/Rate.Drop.Item.Poor = 1/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Normal.*/Rate.Drop.Item.Normal = 1/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Uncommon.*/Rate.Drop.Item.Uncommon = 5/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Rare.*/Rate.Drop.Item.Rare = 20/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Epic.*/Rate.Drop.Item.Epic = 200/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Legendary.*/Rate.Drop.Item.Legendary = 1000/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Item.Quest.*/Rate.Drop.Item.Quest = 2/' /opt/mangos/etc/mangosd.conf
+  sed -i 's/^Rate.Drop.Money.*/Rate.Drop.Money = 10/' /opt/mangos/etc/mangosd.conf
+
   # opt/mangos/etc/realmd.conf configuration
   echo "Configuring /opt/mangos/conf/realmd.conf..."
   sed -i "s/^LoginDatabaseInfo.*/LoginDatabaseInfo = ${MYSQL_HOST};${MYSQL_PORT};${MYSQL_MANGOS_USER};${MYSQL_MANGOS_PWD};${MYSQL_DATABASE_REALM}/" /opt/mangos/etc/realmd.conf
